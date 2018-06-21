@@ -2,9 +2,9 @@ const zk = require('node-zookeeper-client-async')
 const ZOOKEEPER_URL = process.env.ZOOKEEPER_URL || "localhost:2181"
 const zookeeperClient = zk.createAsyncClient(ZOOKEEPER_URL)
 
-const KAFKA_MAX_EVENTS_TO_SENT = parseInt(process.env.KAFKA_MAX_EVENTS_TO_SENT || "10000")
+const KAFKA_COMPRESSION_CODEC = process.env.KAFKA_COMPRESSION_CODEC || "lz4"
 const KAFKA_URL = process.env.KAFKA_URL || "localhost:9092"
-const kafka = require('kafka-node')
+var Kafka = require('node-rdkafka');
 
 process.on('unhandledRejection', (reason, p) => {
   // Otherwise unhandled promises are not possible to trace with the information logged
@@ -15,6 +15,11 @@ process.on('unhandledRejection', (reason, p) => {
 exports.Exporter = class {
   constructor(exporter_name) {
     this.exporter_name = exporter_name
+    this.producer = new Kafka.Producer({
+      'metadata.broker.list': KAFKA_URL,
+      'client.id': this.exporter_name,
+      'compression.codec': KAFKA_COMPRESSION_CODEC
+    })
   }
 
   get topic_name() {
@@ -29,13 +34,11 @@ exports.Exporter = class {
     console.log(`Connecting to zookeeper host ${ZOOKEEPER_URL}`)
     await zookeeperClient.connectAsync()
 
-    const kafkaClient = new kafka.KafkaClient({kafkaHost: KAFKA_URL})
-    this.producer = new kafka.HighLevelProducer(kafkaClient)
-
     console.info(`Connecting to kafka host ${KAFKA_URL}`)
+    this.producer.connect()
     return new Promise((resolve, reject) => {
       this.producer.on("ready", resolve)
-      this.producer.on("error", reject)
+      this.producer.on("event.error", reject)
     })
   }
 
@@ -64,21 +67,11 @@ exports.Exporter = class {
       events = [events]
     }
 
-    events = events.map((event) => typeof(event) === "object" ? JSON.stringify(event) : event)
+    events = events.map((event) => typeof(event) === "object" ? Buffer.from(JSON.stringify(event)) : event)
+    events.forEach((event) => {
+      this.producer.produce(this.topic_name, null, event)
+    })
 
-    for (let i = 0; i < events.length;i += KAFKA_MAX_EVENTS_TO_SENT) {
-      await new Promise((resolve, reject) => {
-        this.producer.send([{
-          topic: this.topic_name,
-          messages: events.slice(i, i + KAFKA_MAX_EVENTS_TO_SENT),
-          attributes: 1
-        }], (err, data) => {
-          if (err) return reject(err)
-          resolve(data)
-        })
-      });
-    }
-
-    return true;
+    return this.producer.flush();
   }
 }
