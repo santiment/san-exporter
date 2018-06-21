@@ -67,9 +67,9 @@ exports.Exporter = class {
       events = [events]
     }
 
-    events = events.map((event) => typeof(event) === "object" ? Buffer.from(JSON.stringify(event)) : event)
+    events = events.map((event) => typeof(event) === "object" ? JSON.stringify(event) : event)
     events.forEach((event) => {
-      this.producer.produce(this.topic_name, null, event)
+      this.producer.produce(this.topic_name, null, Buffer.from(event))
     })
 
     return this.producer.flush();
