@@ -23,7 +23,7 @@ exports.Exporter = class {
   }
 
   get topic_name() {
-    return this.exporter_name.replace("-exporter", "").replace("-", "_")
+    return process.env.KAFKA_TOPIC || this.exporter_name.replace("-exporter", "").replace("-", "_")
   }
 
   get zookeeperPositionNode() {
