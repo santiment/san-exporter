@@ -1,6 +1,17 @@
 # San Exporter
 
-A small library which allows to push data to Santimen data processing pipelines.
+A small library which allows to push data to Santiment data processing pipelines.
+
+## Installing
+
+You can install the library by adding it to your `package.json` with `npm`:
+
+```bash
+$ npm install --save https://github.com/santiment/san-exporter
+```
+
+If you are on OS X you might need to set some additional ENV variables for the
+compilation to pass: https://github.com/Blizzard/node-rdkafka#mac-os-high-sierra
 
 ## Writing exporters
 
