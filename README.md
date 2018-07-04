@@ -39,3 +39,12 @@ This is going to ensure that all dependent services are created.
 * `getLastPosition` - fetch the last saved position. Returns a Promise
 * `savePosition` - update the last position of the exporter. Returns a Promise
 * `sendData` - push an array of events. Returns a Promise
+
+## Getting Help
+
+If you have an idea for a specific data source, which you would like to export and
+include in the Santiment platform, don't hesitate to contact us on Discord:
+https://santiment.net/discord
+
+We are willing to reward developers that contribute data feed to our platform. For
+more details around the rewards, ping us on Discord.
