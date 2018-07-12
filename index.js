@@ -4,6 +4,7 @@ const zookeeperClient = zk.createAsyncClient(ZOOKEEPER_URL)
 
 const KAFKA_COMPRESSION_CODEC = process.env.KAFKA_COMPRESSION_CODEC || "lz4"
 const KAFKA_URL = process.env.KAFKA_URL || "localhost:9092"
+const FLUSH_TIMEOUT = 5000
 var Kafka = require('node-rdkafka');
 
 process.on('unhandledRejection', (reason, p) => {
@@ -73,7 +74,7 @@ exports.Exporter = class {
     })
 
     return new Promise((resolve, reject) =>
-      this.producer.flush(500, (err, result) => {
+      this.producer.flush(FLUSH_TIMEOUT, (err, result) => {
         if (err) return reject(err)
         resolve(result)
       })
