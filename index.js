@@ -72,6 +72,11 @@ exports.Exporter = class {
       this.producer.produce(this.topic_name, null, Buffer.from(event))
     })
 
-    return this.producer.flush();
+    return new Promise((resolve, reject) =>
+      this.producer.flush(500, (err, result) => {
+        if (err) return reject(err)
+        resolve(result)
+      })
+    )
   }
 }
