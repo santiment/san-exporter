@@ -46,20 +46,28 @@ exports.Exporter = class {
   async getLastPosition() {
     if (await zookeeperClient.existsAsync(this.zookeeperPositionNode)) {
       const previousBlockNumber = await zookeeperClient.getDataAsync(this.zookeeperPositionNode)
-      return previousBlockNumber.data.readUInt32BE(0)
-    } else {
-      return null
+
+      if (previousBlockNumber && Buffer.isBuffer(previousBlockNumber.data)) {
+        try {
+          return JSON.parse(previousBlockNumber.data.toString('utf8'))
+        } catch (e) {
+          return null
+        }
+      }
     }
+
+    return null
   }
 
   async savePosition(position) {
-    const newNodeValue = Buffer.alloc(4)
-    newNodeValue.writeUInt32BE(position)
+    if (typeof position !== 'undefined') {
+      const newNodeValue = Buffer.from(JSON.stringify(position), 'utf-8')
 
-    if (await zookeeperClient.existsAsync(this.zookeeperPositionNode)) {
-      return zookeeperClient.setDataAsync(this.zookeeperPositionNode, newNodeValue)
-    } else {
-      return zookeeperClient.mkdirpAsync(this.zookeeperPositionNode, newNodeValue)
+      if (await zookeeperClient.existsAsync(this.zookeeperPositionNode)) {
+        return zookeeperClient.setDataAsync(this.zookeeperPositionNode, newNodeValue)
+      } else {
+        return zookeeperClient.mkdirpAsync(this.zookeeperPositionNode, newNodeValue)
+      }
     }
   }
 
