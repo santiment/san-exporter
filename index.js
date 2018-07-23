@@ -1,17 +1,20 @@
+const Kafka = require('node-rdkafka')
 const zk = require('node-zookeeper-client-async')
+
 const ZOOKEEPER_URL = process.env.ZOOKEEPER_URL || "localhost:2181"
 const zookeeperClient = zk.createAsyncClient(ZOOKEEPER_URL)
 
 const KAFKA_COMPRESSION_CODEC = process.env.KAFKA_COMPRESSION_CODEC || "lz4"
 const KAFKA_URL = process.env.KAFKA_URL || "localhost:9092"
 const FLUSH_TIMEOUT = 5000
-var Kafka = require('node-rdkafka');
+
+const FORMAT_HEADER = 'format=json;'
 
 process.on('unhandledRejection', (reason, p) => {
   // Otherwise unhandled promises are not possible to trace with the information logged
-  console.error('Unhandled Rejection at: ', p, 'reason:', reason, 'error stack:', reason.stack);
+  console.error('Unhandled Rejection at: ', p, 'reason:', reason, 'error stack:', reason.stack)
   process.exit(1)
-});
+})
 
 exports.Exporter = class {
   constructor(exporter_name) {
@@ -46,20 +49,34 @@ exports.Exporter = class {
   async getLastPosition() {
     if (await zookeeperClient.existsAsync(this.zookeeperPositionNode)) {
       const previousBlockNumber = await zookeeperClient.getDataAsync(this.zookeeperPositionNode)
-      return previousBlockNumber.data.readUInt32BE(0)
-    } else {
-      return null
+
+      try {
+        if (Buffer.isBuffer(previousBlockNumber && previousBlockNumber.data)) {
+          const value = previousBlockNumber.data.toString('utf8')
+
+          if (value.startsWith(FORMAT_HEADER)) {
+            return JSON.parse(value.replace(FORMAT_HEADER, ''))
+          } else {
+            return previousBlockNumber.data.readUInt32BE(0)
+          }
+        }
+      } catch (err) {
+        console.error(err)
+      }
     }
+
+    return null
   }
 
   async savePosition(position) {
-    const newNodeValue = Buffer.alloc(4)
-    newNodeValue.writeUInt32BE(position)
+    if (typeof position !== 'undefined') {
+      const newNodeValue = Buffer.from(FORMAT_HEADER + JSON.stringify(position), 'utf-8')
 
-    if (await zookeeperClient.existsAsync(this.zookeeperPositionNode)) {
-      return zookeeperClient.setDataAsync(this.zookeeperPositionNode, newNodeValue)
-    } else {
-      return zookeeperClient.mkdirpAsync(this.zookeeperPositionNode, newNodeValue)
+      if (await zookeeperClient.existsAsync(this.zookeeperPositionNode)) {
+        return zookeeperClient.setDataAsync(this.zookeeperPositionNode, newNodeValue)
+      } else {
+        return zookeeperClient.mkdirpAsync(this.zookeeperPositionNode, newNodeValue)
+      }
     }
   }
 
