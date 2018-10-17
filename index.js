@@ -54,11 +54,7 @@ exports.Exporter = class {
     console.info(`Connecting to kafka host ${KAFKA_URL}`);
     this.producer.connect();
     return new Promise((resolve, reject) => {
-      this.producer.on("ready", _arg => {
-        this.producer.setPollInterval(3000);
-
-        resolve;
-      });
+      this.producer.on("ready", resolve);
       this.producer.on("event.error", reject);
       this.producer.on("delivery-report", function(err, report) {
         console.log("delivery-report: " + JSON.stringify(report));
