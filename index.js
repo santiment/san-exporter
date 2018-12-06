@@ -44,6 +44,7 @@ exports.Exporter = class {
   }
 
   get zookeeperPositionNode() {
+    // Generally it may be an arbitrary position object, not necessarily block number. We keep this name for backward compatibility
     return `/${this.exporter_name}/${this.topic_name}/block-number`;
   }
 
@@ -65,18 +66,18 @@ exports.Exporter = class {
 
   async getLastPosition() {
     if (await zookeeperClient.existsAsync(this.zookeeperPositionNode)) {
-      const previousBlockNumber = await zookeeperClient.getDataAsync(
+      const previousPosition = await zookeeperClient.getDataAsync(
         this.zookeeperPositionNode
       );
 
       try {
-        if (Buffer.isBuffer(previousBlockNumber && previousBlockNumber.data)) {
-          const value = previousBlockNumber.data.toString("utf8");
+        if (Buffer.isBuffer(previousPosition && previousPosition.data)) {
+          const value = previousPosition.data.toString("utf8");
 
           if (value.startsWith(FORMAT_HEADER)) {
             return JSON.parse(value.replace(FORMAT_HEADER, ""));
           } else {
-            return previousBlockNumber.data.readUInt32BE(0);
+            return previousPosition.data;
           }
         }
       } catch (err) {
@@ -118,6 +119,24 @@ exports.Exporter = class {
     );
     events.forEach(event => {
       this.producer.produce(this.topic_name, null, Buffer.from(event));
+    });
+
+    return new Promise((resolve, reject) =>
+      this.producer.flush(KAFKA_FLUSH_TIMEOUT, (err, result) => {
+        if (err) return reject(err);
+        resolve(result);
+      })
+    );
+  }
+
+  async sendDataWithKey(events, keyField) {
+    if (events.constructor !== Array) {
+      events = [events];
+    }
+
+    events.forEach(event => {
+      let eventString = typeof event === "object" ? JSON.stringify(event) : event
+      this.producer.produce(this.topic_name, null, Buffer.from(eventString), event[keyField]);
     });
 
     return new Promise((resolve, reject) =>
