@@ -10,6 +10,7 @@ const KAFKA_FLUSH_TIMEOUT = parseInt(process.env.KAFKA_FLUSH_TIMEOUT || "5000");
 const BUFFERING_MAX_MESSAGES = parseInt(
   process.env.BUFFERING_MAX_MESSAGES || "150000"
 );
+const KAFKA_MESSAGE_MAX_BYTES = parseInt(process.env.KAFKA_MESSAGE_MAX_BYTES || "10485760")
 const FORMAT_HEADER = "format=json;";
 
 process.on("unhandledRejection", (reason, p) => {
@@ -32,7 +33,8 @@ exports.Exporter = class {
       "metadata.broker.list": KAFKA_URL,
       "client.id": this.exporter_name,
       "compression.codec": KAFKA_COMPRESSION_CODEC,
-      "queue.buffering.max.messages": BUFFERING_MAX_MESSAGES
+      "queue.buffering.max.messages": BUFFERING_MAX_MESSAGES,
+      "message.max.bytes": KAFKA_MESSAGE_MAX_BYTES
     });
   }
 
