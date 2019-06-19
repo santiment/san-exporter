@@ -34,7 +34,8 @@ exports.Exporter = class {
       "client.id": this.exporter_name,
       "compression.codec": KAFKA_COMPRESSION_CODEC,
       "queue.buffering.max.messages": BUFFERING_MAX_MESSAGES,
-      "message.max.bytes": KAFKA_MESSAGE_MAX_BYTES
+      "message.max.bytes": KAFKA_MESSAGE_MAX_BYTES,
+      "dr_cb": true
     });
   }
 
@@ -60,8 +61,9 @@ exports.Exporter = class {
       this.producer.on("ready", resolve);
       this.producer.on("event.error", reject);
       this.producer.on("delivery-report", function(err, report) {
-        console.log("delivery-report: " + JSON.stringify(report));
-        counter++;
+        if(err) {
+          throw "message.max.bytes exceed";
+        }
       });
     });
   }
