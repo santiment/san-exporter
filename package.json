@@ -1,6 +1,6 @@
 {
   "name": "san-exporter",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "A library for pushing data to Santiment data pipelines",
   "main": "index.js",
   "scripts": {
