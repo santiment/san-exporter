@@ -22,7 +22,7 @@
   },
   "homepage": "https://github.com/santiment/san-exporter",
   "dependencies": {
-    "node-rdkafka": "^2.3.3",
+    "node-rdkafka": "^2.7.1",
     "node-zookeeper-client-async": "^1.0.0"
   }
 }
