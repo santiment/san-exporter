@@ -62,7 +62,7 @@ exports.Exporter = class {
       this.producer.on("event.error", reject);
       this.producer.on("delivery-report", function(err, report) {
         if(err) {
-          throw "message.max.bytes exceed";
+          throw err;
         }
       });
     });
