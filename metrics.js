@@ -1,4 +1,5 @@
 const {Counter, Gauge, Summary} = require('prom-client')
+const { logger } = require('./logger')
 
 module.exports.downloadedTransactionsCounter = new Counter({
     name: 'downloaded_transactions_count',
@@ -33,7 +34,7 @@ module.exports.currentBlock = new Gauge({
 });
 
 module.exports.startCollection = function () {
-    console.info(`Starting the collection of metrics, the metrics are available on /metrics`);
+    logger.info(`Starting the collection of metrics, the metrics are available on /metrics`);
     require('prom-client').collectDefaultMetrics();
 };
 

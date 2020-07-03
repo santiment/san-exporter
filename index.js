@@ -1,5 +1,6 @@
 const Kafka = require("node-rdkafka");
 const zk = require("node-zookeeper-client-async");
+const { logger } = require('./logger')
 
 const ZOOKEEPER_URL = process.env.ZOOKEEPER_URL || "localhost:2181";
 const zookeeperClient = zk.createAsyncClient(ZOOKEEPER_URL);
@@ -15,7 +16,7 @@ const FORMAT_HEADER = "format=json;";
 
 process.on("unhandledRejection", (reason, p) => {
   // Otherwise unhandled promises are not possible to trace with the information logged
-  console.error(
+  logger.error(
     "Unhandled Rejection at: ",
     p,
     "reason:",
@@ -52,10 +53,10 @@ exports.Exporter = class {
   }
 
   async connect() {
-    console.log(`Connecting to zookeeper host ${ZOOKEEPER_URL}`);
+    logger.info(`Connecting to zookeeper host ${ZOOKEEPER_URL}`);
     await zookeeperClient.connectAsync();
 
-    console.info(`Connecting to kafka host ${KAFKA_URL}`);
+    logger.info(`Connecting to kafka host ${KAFKA_URL}`);
     this.producer.connect();
     return new Promise((resolve, reject) => {
       this.producer.on("ready", resolve);
@@ -85,7 +86,7 @@ exports.Exporter = class {
           }
         }
       } catch (err) {
-        console.error(err);
+        logger.error(err);
       }
     }
 
