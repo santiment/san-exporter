@@ -1,5 +1,10 @@
 const {Counter, Gauge, Summary} = require('prom-client')
 
+module.exports.restartCounter = new Counter({
+    name: 'restart_count',
+    help: 'Number of restarts'
+});
+
 module.exports.downloadedTransactionsCounter = new Counter({
     name: 'downloaded_transactions_count',
     help: 'Number of transactions downloaded'
