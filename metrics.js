@@ -28,6 +28,12 @@ module.exports.requestsResponseTime = new Summary({
     labelNames: ['connection']
 });
 
+module.exports.requestsQueueSize = new Gauge({
+    name: 'requests_queue_size',
+    help: 'Number of requests that are in the queue',
+    labelNames: ['connection']
+});
+
 module.exports.lastExportedBlock = new Gauge({
     name: 'last_exported_block',
     help: 'The last block that was saved by the exporter'
