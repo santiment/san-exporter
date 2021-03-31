@@ -59,14 +59,8 @@ exports.Exporter = class {
 
     logger.info(`Connecting to kafka host ${KAFKA_URL}`);
     this.producer.connect();
-
-    function initTransactionsAndResolve(resolve, producer) {
-      producer.initTransactions(TRANSACTIONS_TIMEOUT_MS);
-      resolve
-    };
-
     return new Promise((resolve, reject) => {
-      this.producer.on("ready", initTransactionsAndResolve(resolve, this. producer));
+      this.producer.on("ready", resolve);
       this.producer.on("event.error", reject);
       this.producer.on("delivery-report", function(err, report) {
         if(err) {
@@ -159,6 +153,9 @@ exports.Exporter = class {
     );
   }
 
+  async initTransactions() {
+    this.producer.initTransactions(TRANSACTIONS_TIMEOUT_MS);
+  }
   async beginTransaction() {
     this.producer.beginTransaction();
   }
