@@ -13,6 +13,7 @@ const BUFFERING_MAX_MESSAGES = parseInt(
 );
 const KAFKA_MESSAGE_MAX_BYTES = parseInt(process.env.KAFKA_MESSAGE_MAX_BYTES || "10485760")
 const FORMAT_HEADER = "format=json;";
+const TRANSACTIONS_TIMEOUT_MS = 200;
 
 process.on("unhandledRejection", (reason, p) => {
   // Otherwise unhandled promises are not possible to trace with the information logged
@@ -58,8 +59,14 @@ exports.Exporter = class {
 
     logger.info(`Connecting to kafka host ${KAFKA_URL}`);
     this.producer.connect();
+
+    function initTransactionsAndResolve(resolve, producer) {
+      producer.initTransactions(TRANSACTIONS_TIMEOUT_MS);
+      resolve
+    };
+
     return new Promise((resolve, reject) => {
-      this.producer.on("ready", resolve);
+      this.producer.on("ready", initTransactionsAndResolve(resolve, this. producer));
       this.producer.on("event.error", reject);
       this.producer.on("delivery-report", function(err, report) {
         if(err) {
@@ -151,4 +158,15 @@ exports.Exporter = class {
       })
     );
   }
+
+  async beginTransaction() {
+    this.producer.beginTransaction();
+  }
+  async commitTransaction() {
+    this.producer.commitTransaction(TRANSACTIONS_TIMEOUT_MS);
+  }
+  async abortTransaction() {
+    this.producer.abortTransaction(TRANSACTIONS_TIMEOUT_MS);
+  }
+
 };
