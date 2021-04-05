@@ -1,4 +1,4 @@
-FROM node:9.11.1-alpine AS builder
+FROM node:15.12.0-alpine AS builder
 
 RUN apk --no-cache add \
       bash \
@@ -21,7 +21,7 @@ COPY package-lock.json /app/package-lock.json
 
 RUN npm install --production
 
-FROM node:9.11.1-alpine
+FROM node:15.12.0-alpine
 
 RUN apk --no-cache add \
   libsasl openssl lz4-libs
