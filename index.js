@@ -13,7 +13,7 @@ const BUFFERING_MAX_MESSAGES = parseInt(
 );
 const KAFKA_MESSAGE_MAX_BYTES = parseInt(process.env.KAFKA_MESSAGE_MAX_BYTES || "10485760")
 const FORMAT_HEADER = "format=json;";
-const TRANSACTIONS_TIMEOUT_MS = 200;
+const TRANSACTIONS_TIMEOUT_MS = 2000;
 
 process.on("unhandledRejection", (reason, p) => {
   // Otherwise unhandled promises are not possible to trace with the information logged
@@ -29,16 +29,22 @@ process.on("unhandledRejection", (reason, p) => {
 });
 
 exports.Exporter = class {
-  constructor(exporter_name) {
+  constructor(exporter_name, transactional=false) {
     this.exporter_name = exporter_name;
-    this.producer = new Kafka.Producer({
+    var producer_settings = {
       "metadata.broker.list": KAFKA_URL,
       "client.id": this.exporter_name,
       "compression.codec": KAFKA_COMPRESSION_CODEC,
       "queue.buffering.max.messages": BUFFERING_MAX_MESSAGES,
       "message.max.bytes": KAFKA_MESSAGE_MAX_BYTES,
       "dr_cb": true
-    });
+    }
+    if (transactional) {
+        producer_settings['transactional.id'] = this.topic_name;
+        producer_settings['enable.idempotence'] = true;
+    }
+
+    this.producer = new Kafka.Producer(producer_settings);
   }
 
   get topic_name() {
@@ -68,6 +74,14 @@ exports.Exporter = class {
         }
       });
     });
+  }
+
+  async disconnect() {
+    logger.info(`Disconnecting from zookeeper host ${ZOOKEEPER_URL}`);
+    await zookeeperClient.closeAsync();
+
+    logger.info(`Disconnecting from kafka host ${KAFKA_URL}`);
+    this.producer.disconnect();
   }
 
   async getLastPosition() {
@@ -153,16 +167,16 @@ exports.Exporter = class {
     );
   }
 
-  async initTransactions() {
+  initTransactions() {
     this.producer.initTransactions(TRANSACTIONS_TIMEOUT_MS);
   }
-  async beginTransaction() {
+  beginTransaction() {
     this.producer.beginTransaction();
   }
-  async commitTransaction() {
+  commitTransaction() {
     this.producer.commitTransaction(TRANSACTIONS_TIMEOUT_MS);
   }
-  async abortTransaction() {
+  abortTransaction() {
     this.producer.abortTransaction(TRANSACTIONS_TIMEOUT_MS);
   }
 

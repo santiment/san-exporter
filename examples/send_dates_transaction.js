@@ -1,8 +1,8 @@
 const pkg = require('../package.json');
 const { Exporter } = require('../index')
-const exporter = new Exporter(pkg.name)
+const exporter = new Exporter(pkg.name, true)
 
-async function pushData(num_iteration) {
+async function pushData() {
   const timestamp = Math.floor(new Date() / 1000)
 
   let lastPosition = await exporter.getLastPosition()
@@ -12,7 +12,7 @@ async function pushData(num_iteration) {
     key = lastPosition.key + 1
   }
 
-  console.log("Sending data, iteration", num_iteration);
+  console.log("Sending data with transaction...")
   await exporter.sendDataWithKey({
     timestamp: timestamp,
     iso_date: new Date().toISOString(),
@@ -25,15 +25,20 @@ async function pushData(num_iteration) {
 
   let newPosition = await exporter.getLastPosition()
   console.log(`New position: ${JSON.stringify(newPosition)}`)
+
 }
 
 async function work() {
-  await exporter.connect()
+  console.log("Start sending data with transactions.");
+  await exporter.connect();
+  exporter.initTransactions();
+  exporter.beginTransaction();
 
   for (i = 0; i <= 10; i++) {
-    await pushData(i)
+    await pushData()
   }
 
+  exporter.commitTransaction();
   await exporter.disconnect();
 }
 
