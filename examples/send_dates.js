@@ -28,7 +28,8 @@ async function pushData(num_iteration) {
 }
 
 async function work() {
-  await exporter.connect()
+  await exporter.connect();
+  console.log("Connected to Kafka");
 
   for (i = 0; i <= 10; i++) {
     await pushData(i)
