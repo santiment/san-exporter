@@ -64,8 +64,7 @@ exports.Exporter = class {
     await zookeeperClient.connectAsync();
 
     logger.info(`Connecting to kafka host ${KAFKA_URL}`);
-    this.producer.connect();
-    return new Promise((resolve, reject) => {
+    var promise_result = new Promise((resolve, reject) => {
       this.producer.on("ready", resolve);
       this.producer.on("event.error", reject);
       this.producer.on("delivery-report", function(err, report) {
@@ -74,6 +73,8 @@ exports.Exporter = class {
         }
       });
     });
+    this.producer.connect();
+    return promise_result;
   }
   /**
    * Disconnect from Zookeeper and Kafka.
