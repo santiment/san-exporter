@@ -82,8 +82,13 @@ exports.Exporter = class {
   disconnect(callback) {
     logger.info(`Disconnecting from zookeeper host ${ZOOKEEPER_URL}`);
     zookeeperClient.closeAsync().then( () => {
-      logger.info(`Disconnecting from kafka host ${KAFKA_URL}`);
-      this.producer.disconnect(callback);
+      if (this.producer.isConnected()) {
+        logger.info(`Disconnecting from kafka host ${KAFKA_URL}`);
+        this.producer.disconnect(callback);
+      }
+      else {
+        logger.info(`Producer is NOT connected to kafka host ${KAFKA_URL}`);
+      }
     })
   }
 
