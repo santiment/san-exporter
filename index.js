@@ -75,13 +75,16 @@ exports.Exporter = class {
       });
     });
   }
-
-  async disconnect() {
+  /**
+   * Disconnect from Zookeeper and Kafka.
+   * This method is completed once the callback is invoked.
+   */
+  disconnect(callback) {
     logger.info(`Disconnecting from zookeeper host ${ZOOKEEPER_URL}`);
-    await zookeeperClient.closeAsync();
-
-    logger.info(`Disconnecting from kafka host ${KAFKA_URL}`);
-    this.producer.disconnect();
+    zookeeperClient.closeAsync().then( () => {
+      logger.info(`Disconnecting from kafka host ${KAFKA_URL}`);
+      this.producer.disconnect(callback);
+    })
   }
 
   async getLastPosition() {

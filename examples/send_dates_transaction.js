@@ -39,7 +39,7 @@ async function work() {
   }
 
   exporter.commitTransaction();
-  await exporter.disconnect();
+  exporter.disconnect();
 }
 
 work()

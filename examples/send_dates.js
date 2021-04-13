@@ -35,7 +35,7 @@ async function work() {
     await pushData(i)
   }
 
-  await exporter.disconnect();
+  exporter.disconnect();
 }
 
 work()
