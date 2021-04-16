@@ -59,7 +59,12 @@ exports.Exporter = class {
     return `/${this.exporter_name}/${this.topic_name}/block-number`;
   }
 
-  async connect() {
+  /**
+   *
+   * @param {Function} Optional callback to be invoked on message delivery.
+   * @returns {Promise} Promise, resolved on connection completed.
+   */
+  async connect(callback) {
     logger.info(`Connecting to zookeeper host ${ZOOKEEPER_URL}`);
     await zookeeperClient.connectAsync();
 
@@ -67,11 +72,14 @@ exports.Exporter = class {
     var promise_result = new Promise((resolve, reject) => {
       this.producer.on("ready", resolve);
       this.producer.on("event.error", reject);
-      this.producer.on("delivery-report", function(err, report) {
-        if(err) {
-          throw err;
+      if (null == callback) {
+        callback = function(err, report) {
+          if(err) {
+            throw err;
+          }
         }
-      });
+      }
+      this.producer.on("delivery-report", callback);
     });
     this.producer.connect();
     return promise_result;
