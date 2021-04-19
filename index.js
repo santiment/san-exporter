@@ -185,16 +185,16 @@ exports.Exporter = class {
   }
 
   initTransactions() {
-    this.producer.initTransactions(TRANSACTIONS_TIMEOUT_MS);
+    return this.producer.initTransactions(TRANSACTIONS_TIMEOUT_MS);
   }
   beginTransaction() {
-    this.producer.beginTransaction();
+    return this.producer.beginTransaction();
   }
   commitTransaction() {
-    this.producer.commitTransaction(TRANSACTIONS_TIMEOUT_MS);
+    return this.producer.commitTransaction(TRANSACTIONS_TIMEOUT_MS);
   }
   abortTransaction() {
-    this.producer.abortTransaction(TRANSACTIONS_TIMEOUT_MS);
+    return this.producer.abortTransaction(TRANSACTIONS_TIMEOUT_MS);
   }
 
 };
