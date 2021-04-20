@@ -3,7 +3,6 @@ const zk = require("node-zookeeper-client-async");
 const { logger } = require('./logger')
 
 const ZOOKEEPER_URL = process.env.ZOOKEEPER_URL || "localhost:2181";
-const zookeeperClient = zk.createAsyncClient(ZOOKEEPER_URL);
 
 const KAFKA_COMPRESSION_CODEC = process.env.KAFKA_COMPRESSION_CODEC || "lz4";
 const KAFKA_URL = process.env.KAFKA_URL || "localhost:9092";
@@ -45,6 +44,7 @@ exports.Exporter = class {
     }
 
     this.producer = new Kafka.Producer(producer_settings);
+    this.zookeeperClient = zk.createAsyncClient(ZOOKEEPER_URL);
   }
 
   get topic_name() {
@@ -66,7 +66,7 @@ exports.Exporter = class {
     logger.info(`Connecting to zookeeper host ${ZOOKEEPER_URL}`);
 
     try {
-      await zookeeperClient.connectAsync();
+      await this.zookeeperClient.connectAsync();
     }
     catch(ex) {
       console.error("Error connecting to Zookeeper: ", ex);
@@ -95,7 +95,7 @@ exports.Exporter = class {
    */
   disconnect(callback) {
     logger.info(`Disconnecting from zookeeper host ${ZOOKEEPER_URL}`);
-    zookeeperClient.closeAsync().then( () => {
+    this.zookeeperClient.closeAsync().then( () => {
       if (this.producer.isConnected()) {
         logger.info(`Disconnecting from kafka host ${KAFKA_URL}`);
         this.producer.disconnect(callback);
@@ -107,8 +107,8 @@ exports.Exporter = class {
   }
 
   async getLastPosition() {
-    if (await zookeeperClient.existsAsync(this.zookeeperPositionNode)) {
-      const previousPosition = await zookeeperClient.getDataAsync(
+    if (await this.zookeeperClient.existsAsync(this.zookeeperPositionNode)) {
+      const previousPosition = await this.zookeeperClient.getDataAsync(
         this.zookeeperPositionNode
       );
 
@@ -137,13 +137,13 @@ exports.Exporter = class {
         "utf-8"
       );
 
-      if (await zookeeperClient.existsAsync(this.zookeeperPositionNode)) {
-        return zookeeperClient.setDataAsync(
+      if (await this.zookeeperClient.existsAsync(this.zookeeperPositionNode)) {
+        return this.zookeeperClient.setDataAsync(
           this.zookeeperPositionNode,
           newNodeValue
         );
       } else {
-        return zookeeperClient.mkdirpAsync(
+        return this.zookeeperClient.mkdirpAsync(
           this.zookeeperPositionNode,
           newNodeValue
         );
