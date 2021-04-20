@@ -60,11 +60,9 @@ exports.Exporter = class {
   }
 
   /**
-   *
-   * @param {Function} Optional callback to be invoked on message delivery.
    * @returns {Promise} Promise, resolved on connection completed.
    */
-  async connect(callback) {
+  async connect() {
     logger.info(`Connecting to zookeeper host ${ZOOKEEPER_URL}`);
     await zookeeperClient.connectAsync();
 
@@ -72,18 +70,18 @@ exports.Exporter = class {
     var promise_result = new Promise((resolve, reject) => {
       this.producer.on("ready", resolve);
       this.producer.on("event.error", reject);
-      if (null == callback) {
-        callback = function(err, report) {
-          if(err) {
-            throw err;
-          }
+      // The user can provide a callback for delivery reports with the
+      // dedicated method 'subscribeDeliveryReports'.
+      this.producer.on("delivery-report", function(err, report) {
+        if(err) {
+          throw err;
         }
-      }
-      this.producer.on("delivery-report", callback);
+      });
     });
     this.producer.connect();
     return promise_result;
   }
+
   /**
    * Disconnect from Zookeeper and Kafka.
    * This method is completed once the callback is invoked.
@@ -183,6 +181,14 @@ exports.Exporter = class {
       })
     );
   }
+
+  /**
+   *
+   * @param {Function} Callback to be invoked on message delivery.
+   */
+   async subscribeDeliveryReports(callback) {
+      this.producer.on("delivery-report", callback);
+   }
 
   initTransactions() {
     return this.producer.initTransactions(TRANSACTIONS_TIMEOUT_MS);
