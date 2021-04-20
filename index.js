@@ -64,7 +64,14 @@ exports.Exporter = class {
    */
   async connect() {
     logger.info(`Connecting to zookeeper host ${ZOOKEEPER_URL}`);
-    await zookeeperClient.connectAsync();
+
+    try {
+      await zookeeperClient.connectAsync();
+    }
+    catch(ex) {
+      console.error("Error connecting to Zookeeper: ", ex);
+      throw ex;
+    }
 
     logger.info(`Connecting to kafka host ${KAFKA_URL}`);
     var promise_result = new Promise((resolve, reject) => {
@@ -183,12 +190,22 @@ exports.Exporter = class {
   }
 
   /**
-   *
    * @param {Function} Callback to be invoked on message delivery.
    */
-   async subscribeDeliveryReports(callback) {
-      this.producer.on("delivery-report", callback);
-   }
+  async subscribeDeliveryReports(callback) {
+     this.producer.on("delivery-report", callback);
+  }
+
+  /**
+   * Unsubscribe from delivery reports, restoring the default error checking.
+   */
+  async unSubscribeDeliveryReports() {
+    this.producer.on("delivery-report", function(err, report) {
+      if(err) {
+        throw err;
+      }
+    });
+  }
 
   initTransactions() {
     return this.producer.initTransactions(TRANSACTIONS_TIMEOUT_MS);
