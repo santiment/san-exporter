@@ -190,6 +190,7 @@ exports.Exporter = class {
   }
 
   /**
+   * Subscribe to delivery reports.
    * @param {Function} Callback to be invoked on message delivery.
    */
   async subscribeDeliveryReports(callback) {
