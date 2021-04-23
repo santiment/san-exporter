@@ -1,15 +1,15 @@
 const pkg = require('../package.json');
 const { Exporter } = require('../index')
-const exporter = new Exporter(pkg.name)
+const exporter = new Exporter(pkg.name, true)
 
-async function pushData(num_iteration) {
+async function pushData() {
   let lastPosition = await exporter.getLastPosition()
   console.log(`Last position: ${JSON.stringify(lastPosition)}`)
   const key = lastPosition ? lastPosition.key + 1 : 1
 
   const now = new Date()
   const timestamp = Math.floor(now.getTime() / 1000)
-  console.log("Sending data, iteration", num_iteration);
+  console.log("Sending data with transaction...")
   await exporter.sendDataWithKey({
     timestamp: timestamp,
     iso_date: now.toISOString(),
@@ -25,13 +25,16 @@ async function pushData(num_iteration) {
 }
 
 async function work() {
+  console.log("Start sending data with transactions.");
   await exporter.connect();
-  console.log("Connected to Kafka");
+  exporter.initTransactions();
+  exporter.beginTransaction();
 
   for (i = 0; i <= 10; i++) {
-    await pushData(i)
+    await pushData()
   }
 
+  exporter.commitTransaction();
   exporter.disconnect();
 }
 

@@ -22,8 +22,8 @@
   },
   "homepage": "https://github.com/santiment/san-exporter",
   "dependencies": {
-    "node-rdkafka": "^2.9.1",
-    "node-zookeeper-client-async": "^1.0.0",
-    "node-json-logger": "^0.0.11"
+    "@santiment-network/node-rdkafka": "2.10.10",
+    "node-json-logger": "^0.0.11",
+    "node-zookeeper-client-async": "^1.0.0"
   }
 }
