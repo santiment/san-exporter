@@ -56,3 +56,5 @@ module.exports.initRegistry = function () {
 
     return register
 };
+
+module.exports.client = client;
