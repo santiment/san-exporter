@@ -50,7 +50,9 @@ module.exports.startCollection = function (registry) {
 };
 
 module.exports.initRegistry = function () {
+
     const Registry = client.Registry;
     const register = new Registry();
+
     return register
 };
