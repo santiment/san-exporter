@@ -49,12 +49,12 @@ module.exports.startCollection = function (registry) {
     client.collectDefaultMetrics({ registry });
 };
 
-module.exports.initRegistry = function () {
+// module.exports.initRegistry = function () {
 
-    const Registry = client.Registry;
-    const register = new Registry();
+//     const Registry = client.Registry;
+//     const register = new Registry();
 
-    return register
-};
+//     return register
+// };
 
 module.exports.client = client;
